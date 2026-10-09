@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="B100 Intelligence: interactive fundamental-analysis dashboard for Nifty-100-style companies (health scoring, peer similarity, risk map) plus a village-level location REST API demo. Synthetic sample data.">
+<meta property="og:title" content="B100 Intelligence · Fundamental analysis &amp; location API">
+<meta property="og:description" content="Health scores, peer maps, what-if weighting and a live location-API playground.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#060a13">
+<title>B100 Intelligence · Fundamental analysis & location API</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root,:root[data-theme="dark"]{--bg:#060a13;--bg2:#0b1120;--card:rgba(255,255,255,.045);--cb:rgba(255,255,255,.09);--tx:#e8edfa;--mut:#8995b2;--ac:#5eead4;--ac2:#8b5cf6;--ac3:#f59e0b;--good:#34d399;--bad:#fb7185;--glass:rgba(8,13,25,.72);--sh:0 24px 60px -24px rgba(0,0,0,.7);--code:#0a0f1c}
+:root[data-theme="light"]{--bg:#f3f6fc;--bg2:#ffffff;--card:rgba(255,255,255,.85);--cb:rgba(20,32,70,.11);--tx:#0e1730;--mut:#5a6784;--ac:#0d9488;--ac2:#6d28d9;--ac3:#d97706;--good:#059669;--bad:#e11d48;--glass:rgba(255,255,255,.8);--sh:0 24px 60px -28px rgba(20,32,70,.25);--code:#eef2fa}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-behavior:smooth;scroll-padding-top:calc(76px + env(safe-area-inset-top,0px))}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.55 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(60% 50% at 12% 8%,color-mix(in srgb,var(--ac2) 22%,transparent),transparent 70%),radial-gradient(50% 45% at 92% 20%,color-mix(in srgb,var(--ac) 16%,transparent),transparent 70%),radial-gradient(60% 50% at 60% 100%,color-mix(in srgb,var(--ac3) 10%,transparent),transparent 70%)}
+h1,h2,h3{font-family:"Space Grotesk",Inter,system-ui,sans-serif;letter-spacing:-.02em;margin:0}
+.mono{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace}
+.wrap{max-width:1240px;margin:0 auto;padding:0 22px}
+section{padding:88px 0 40px}
+.eyebrow{font:500 12px "JetBrains Mono",monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ac)}
+.sh{font-size:clamp(28px,4vw,44px);line-height:1.08;margin:10px 0 12px}
+.lead{color:var(--mut);max-width:680px;font-size:16px}
+.glass{background:var(--card);border:1px solid var(--cb);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:20px;box-shadow:var(--sh)}
+.pad{padding:20px}
+/* nav */
+nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--glass);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-bottom:1px solid var(--cb)}
+nav .wrap{display:flex;align-items:center;gap:18px;height:64px}
+.logo{display:flex;align-items:center;gap:10px;font:700 17px "Space Grotesk",sans-serif;color:var(--tx);text-decoration:none}
+.links{display:flex;gap:4px;margin-left:auto;overflow-x:auto;scrollbar-width:none}
+.links a{color:var(--mut);text-decoration:none;padding:7px 12px;border-radius:10px;font-size:13.5px;white-space:nowrap}
+.links a:hover{color:var(--tx);background:var(--card)}
+.ib{border:1px solid var(--cb);background:var(--card);color:var(--tx);border-radius:10px;padding:7px 11px;cursor:pointer;font:inherit;font-size:13px;white-space:nowrap}
+.ib kbd{font:11px "JetBrains Mono",monospace;color:var(--mut);margin-left:6px}
+/* hero */
+.hero{position:relative;min-height:calc(100vh - 64px);display:flex;align-items:center;padding:40px 0 60px;overflow:hidden}
+#hc{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+.hero .wrap{position:relative;z-index:1;display:grid;grid-template-columns:1.25fr .85fr;gap:40px;align-items:center;width:100%}
+.hero h1{font-size:clamp(38px,6.4vw,76px);line-height:1;margin:16px 0 18px}
+.grad{background:linear-gradient(95deg,var(--ac),var(--ac2) 55%,var(--ac3));-webkit-background-clip:text;background-clip:text;color:transparent}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:12px;font-weight:600;text-decoration:none;border:1px solid var(--cb);color:var(--tx);cursor:pointer;background:var(--card);font-size:14.5px}
+.btn.p{background:linear-gradient(95deg,var(--ac),var(--ac2));color:#06101c;border:0}
+.btn:hover{transform:translateY(-2px);transition:.2s}
+.stats{display:flex;flex-wrap:wrap;gap:30px;margin-top:38px}
+.stats b{display:block;font:700 34px "Space Grotesk",sans-serif}.stats span{color:var(--mut);font-size:12.5px}
+.float{display:grid;gap:14px}
+.fc{padding:16px;animation:fl 6s ease-in-out infinite}.fc:nth-child(2){animation-delay:-2s;margin-left:34px}.fc:nth-child(3){animation-delay:-4s}
+@keyframes fl{50%{transform:translateY(-10px)}}
+.tag{display:inline-block;font:500 11px "JetBrains Mono",monospace;padding:3px 9px;border-radius:99px;border:1px solid var(--cb);color:var(--mut)}
+/* ticker */
+.tick{border-block:1px solid var(--cb);background:var(--card);overflow:hidden;white-space:nowrap}
+.tick div{display:inline-flex;gap:34px;padding:11px 0;animation:mq 60s linear infinite}
+.tick:hover div{animation-play-state:paused}
+@keyframes mq{to{transform:translateX(-50%)}}
+.ti{font:500 13px "JetBrains Mono",monospace;display:inline-flex;gap:8px;align-items:center}
+.up{color:var(--good)}.dn{color:var(--bad)}
+/* grids */
+.g{display:grid;gap:16px}.g3{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr))}.g4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.kpi{padding:18px}.kpi b{display:block;font:700 34px "Space Grotesk",sans-serif}.kpi span{color:var(--mut);font-size:12.5px}
+.cv{position:relative;height:280px}
+/* treemap / heatmap */
+#tm{position:relative;height:380px;border-radius:16px;overflow:hidden}
+.tc{position:absolute;padding:12px;border:2px solid var(--bg);border-radius:10px;overflow:hidden;cursor:pointer;transition:filter .2s,transform .2s;color:#06101c}
+.tc:hover{filter:brightness(1.12);transform:scale(.99)}
+.tc b{display:block;font:700 15px "Space Grotesk",sans-serif}.tc small{opacity:.8}
+.hm{display:grid;gap:3px;font:500 11px "JetBrains Mono",monospace}
+.hm div{padding:8px 4px;text-align:center;border-radius:6px}
+/* screener */
+.fb{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:22px 0}
+.chip{border:1px solid var(--cb);background:var(--card);color:var(--tx);padding:7px 14px;border-radius:99px;cursor:pointer;font-size:13px}
+.chip.on{background:linear-gradient(95deg,var(--ac),var(--ac2));color:#06101c;border-color:transparent;font-weight:600}
+input,select,textarea{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--cb);border-radius:10px;padding:9px 12px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--ac)}
+select option{background:var(--bg2);color:var(--tx)}
+.co{padding:16px;cursor:pointer;position:relative;overflow:hidden;transition:transform .25s,border-color .25s}
+.co:hover{transform:translateY(-5px);border-color:var(--c)}
+.co:before{content:"";position:absolute;right:-40px;top:-40px;width:130px;height:130px;border-radius:50%;background:var(--c);opacity:.14;filter:blur(24px)}
+.co .top{display:flex;gap:12px;align-items:center}.co .top>div:nth-child(2){flex:1;min-width:0}
+.co b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.co small{color:var(--mut)}
+.sp{width:100%;height:46px;margin:12px 0 6px;display:block}
+.st{display:flex;justify-content:space-between;font-size:12px;color:var(--mut)}.st b{display:inline;color:var(--tx)}
+.mn{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font:700 15px "Space Grotesk",sans-serif;color:#06101c;flex:none}
+/* drawer */
+#ov{position:fixed;inset:0;background:rgba(2,5,12,.6);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:.3s;z-index:40}
+#dr{position:fixed;top:0;right:0;height:100%;width:min(760px,100%);background:var(--bg2);border-left:1px solid var(--cb);transform:translateX(102%);transition:transform .45s cubic-bezier(.2,.8,.2,1);z-index:41;overflow-y:auto;padding:24px;padding-top:calc(24px + env(safe-area-inset-top,0px))}
+body.open #ov{opacity:1;pointer-events:auto}body.open #dr{transform:none}
+.dh{display:flex;gap:14px;align-items:center;margin-bottom:18px}.dh h2{font-size:26px}
+.x{margin-left:auto}
+ul.pc{margin:8px 0 0;padding-left:18px}.pro li::marker{color:var(--good)}.con li::marker{color:var(--bad)}
+.pill{display:inline-block;padding:3px 11px;border-radius:99px;color:#0a1020;font:700 12px Inter,sans-serif}
+table{border-collapse:collapse;width:100%;font-size:13px}th,td{padding:7px 9px;border-bottom:1px solid var(--cb);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}th{color:var(--mut);font-weight:500}
+.scroll{overflow-x:auto}
+/* lab */
+.sl{display:grid;grid-template-columns:130px 1fr 44px;gap:12px;align-items:center;margin:11px 0;font-size:13.5px}
+input[type=range]{padding:0;accent-color:var(--ac);width:100%}
+#lb{position:relative}
+.lr{position:absolute;left:0;right:0;height:42px;display:grid;grid-template-columns:34px 110px 1fr 70px 38px;gap:10px;align-items:center;transition:transform .6s cubic-bezier(.3,.9,.3,1);font-size:13px}
+.bw{height:12px;border-radius:99px;background:var(--cb);overflow:hidden}.bw i{display:block;height:100%;border-radius:99px;transition:width .6s,background .6s}
+/* map + api */
+.mapbox{position:relative}
+#map{width:100%;height:auto;display:block}
+.pt{cursor:pointer;transition:r .2s,opacity .2s}.pt:hover{r:7}
+.pt.hl{animation:pu 1.4s infinite}
+@keyframes pu{0%{stroke-width:0;stroke:var(--ac)}100%{stroke-width:16;stroke:transparent}}
+#mtip{position:absolute;pointer-events:none;background:var(--bg2);border:1px solid var(--cb);border-radius:10px;padding:6px 10px;font-size:12px;opacity:0;transition:opacity .15s;white-space:nowrap}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.seg button{font:500 12px "JetBrains Mono",monospace;padding:6px 10px;border-radius:8px;border:1px solid var(--cb);background:var(--card);color:var(--mut);cursor:pointer}
+.seg button.on{color:var(--ac);border-color:var(--ac)}
+pre.code{background:var(--code);border:1px solid var(--cb);border-radius:12px;padding:14px;overflow:auto;max-height:360px;font:12px/1.55 "JetBrains Mono",monospace;margin:10px 0 0}
+.k{color:#7dd3fc}.s{color:#86efac}.n{color:#fbbf24}.b{color:#c4b5fd}
+:root[data-theme="light"] .k{color:#0369a1}:root[data-theme="light"] .s{color:#15803d}:root[data-theme="light"] .n{color:#b45309}:root[data-theme="light"] .b{color:#6d28d9}
+.phone{max-width:380px;margin:0 auto;border:1px solid var(--cb);border-radius:34px;padding:22px 18px;background:var(--bg2);box-shadow:var(--sh)}
+.phone label{display:block;font-size:11.5px;color:var(--mut);margin:10px 0 4px}.phone input,.phone textarea{width:100%}
+.acl{border:1px solid var(--cb);border-radius:10px;margin-top:4px;background:var(--bg2);max-height:190px;overflow:auto}.acl div{padding:8px 11px;cursor:pointer;font-size:13px}.acl div:hover{background:var(--card)}
+.prog{height:8px;background:var(--cb);border-radius:9px;overflow:hidden}.prog i{display:block;height:100%;background:linear-gradient(90deg,var(--ac),var(--ac2))}
+/* arch */
+.flow{stroke-dasharray:6 6;animation:fw 1.2s linear infinite}@keyframes fw{to{stroke-dashoffset:-12}}
+/* palette */
+#pal{position:fixed;inset:0;z-index:60;display:none;align-items:flex-start;justify-content:center;padding-top:14vh;background:rgba(2,5,12,.6);backdrop-filter:blur(5px)}
+#pal.on{display:flex}#pal .box{width:min(560px,92vw);background:var(--bg2);border:1px solid var(--cb);border-radius:16px;overflow:hidden;box-shadow:var(--sh)}
+#pal input{width:100%;border:0;border-bottom:1px solid var(--cb);border-radius:0;padding:16px;font-size:16px;background:transparent}
+#pal .it{padding:11px 16px;cursor:pointer;display:flex;justify-content:space-between}#pal .it.on{background:var(--card)}
+#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,30px);opacity:0;background:var(--bg2);border:1px solid var(--cb);padding:10px 16px;border-radius:12px;z-index:70;transition:.3s}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+.rv{opacity:0;transform:translateY(26px);transition:opacity .8s,transform .8s}.rv.in{opacity:1;transform:none}
+footer{padding:50px 0 70px;color:var(--mut);font-size:13px;border-top:1px solid var(--cb);margin-top:60px}
+@media(max-width:900px){.hero .wrap{grid-template-columns:1fr}.float{display:none}.sl{grid-template-columns:100px 1fr 40px}.lr{grid-template-columns:28px 90px 1fr 56px 30px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<nav><div class="wrap">
+  <a class="logo" href="#top"><svg width="30" height="30" viewBox="0 0 32 32"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5eead4"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs><rect width="32" height="32" rx="9" fill="url(#lg)"/><path d="M8 22V13m5 9V9m5 13v-7m5 7V11" stroke="#06101c" stroke-width="3" stroke-linecap="round"/></svg>B100 Intelligence</a>
+  <div class="links"><a href="#pulse">Market pulse</a><a href="#screener">Screener</a><a href="#lab">Health lab</a><a href="#risk">Risk map</a><a href="#api">VillageAPI</a><a href="#console">Console</a><a href="#arch">Architecture</a></div>
+  <button class="ib" onclick="pal(1)">Search<kbd>Ctrl K</kbd></button>
+  <button class="ib" id="tt" onclick="theme()" aria-label="Toggle theme">☾</button>
+</div></nav>
+
+<header class="hero" id="top">
+  <canvas id="hc"></canvas>
+  <div class="wrap">
+    <div>
+      <span class="tag">Capstone · Data analytics × software engineering</span>
+      <h1>Every number behind <span class="grad">India's top companies</span>, scored and mapped.</h1>
+      <p class="lead">A fundamental-analysis platform that turns raw balance sheets into health scores, peer maps and anomaly flags — plus a developer-grade API for every village in India.</p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:26px"><a class="btn p" href="#pulse">Explore the market →</a><a class="btn" href="#api">Try the live API</a></div>
+      <div class="stats"><div><b data-count="16" id="s1">0</b><span>companies in this demo</span></div><div><b data-count="10">0</b><span>years of financials</span></div><div><b data-count="6">0</b><span>health dimensions</span></div><div><b data-count="6">0</b><span>API endpoints</span></div></div>
+    </div>
+    <div class="float" id="fl"></div>
+  </div>
+</header>
+<div class="tick"><div id="tk"></div></div>
+
+<section id="pulse"><div class="wrap">
+  <span class="eyebrow rv">01 · Market pulse</span><h2 class="sh rv">The whole market, <span class="grad">one glance</span></h2>
+  <p class="lead rv">Area is revenue, colour is financial health. Click a sector to filter the screener below.</p>
+  <div class="g g4 rv" style="margin:26px 0" id="kp"></div>
+  <div class="g g2">
+    <div class="glass pad rv"><h3>Sector treemap</h3><p class="lead" style="font-size:13px;margin:4px 0 12px">Size = total revenue · colour = average health score</p><div id="tm"></div></div>
+    <div class="glass pad rv"><h3>Operating margin heatmap</h3><p class="lead" style="font-size:13px;margin:4px 0 12px">Average OPM % by sector and year</p><div id="hm" class="scroll"></div></div>
+    <div class="glass pad rv"><div style="display:flex;justify-content:space-between;align-items:center"><h3>Aggregate trend</h3><div class="seg" style="margin:0"><button class="on" id="m1" onclick="trend('sales')">Revenue</button><button id="m2" onclick="trend('np')">Net profit</button></div></div><div class="cv"><canvas id="c1"></canvas></div></div>
+    <div class="glass pad rv"><h3>Health distribution</h3><div class="cv"><canvas id="c2"></canvas></div></div>
+  </div>
+</div></section>
+
+<section id="screener"><div class="wrap">
+  <span class="eyebrow rv">02 · Screener</span><h2 class="sh rv">Find the company, <span class="grad">then go deep</span></h2>
+  <p class="lead rv">Filter, sort and click any card for a full deep-dive: cash flow, leverage, peers, auto-generated pros &amp; cons and a model forecast.</p>
+  <div class="fb rv"><input id="q" placeholder="Search company or symbol…" oninput="Q=this.value;cards()" style="min-width:230px"><div id="sf" style="display:contents"></div>
+  <select id="so" onchange="SORT=this.value;cards()" style="margin-left:auto"><option value="score">Sort: health score</option><option value="roe">ROE</option><option value="g3">3Y growth</option><option value="de">Lowest D/E</option><option value="sales">Revenue</option></select></div>
+  <div class="g g3" id="cards"></div>
+</div></section>
+
+<section id="lab"><div class="wrap">
+  <span class="eyebrow rv">03 · Health lab</span><h2 class="sh rv">Re-weight the model. <span class="grad">Watch the market re-rank.</span></h2>
+  <p class="lead rv">The health score blends six dimensions. Drag the weights — or pick an investor style — and see sensitivity in real time.</p>
+  <div class="g g2" style="margin-top:26px;align-items:start">
+    <div class="glass pad rv"><h3>Dimension weights</h3><div class="seg" id="pre"></div><div id="sls"></div><p class="note mono" style="color:var(--mut);font-size:12px">Weights are normalised to 100. Default: 25 · 20 · 20 · 15 · 10 · 10.</p></div>
+    <div class="glass pad rv"><h3>Live leaderboard</h3><div id="lb" style="margin-top:12px"></div></div>
+  </div>
+</div></section>
+
+<section id="risk"><div class="wrap">
+  <span class="eyebrow rv">04 · Risk–return map</span><h2 class="sh rv">Who earns more <span class="grad">for the risk?</span></h2>
+  <p class="lead rv">Bubble size is revenue. Swap the axes to explore leverage, margins, growth and payout.</p>
+  <div class="glass pad rv" style="margin-top:24px"><div class="fb" style="margin:0 0 10px"><span style="color:var(--mut)">X</span><select id="ax" onchange="risk()"></select><span style="color:var(--mut)">Y</span><select id="ay" onchange="risk()"></select></div><div class="cv" style="height:460px"><canvas id="c3"></canvas></div></div>
+</div></section>
+
+<section id="api"><div class="wrap">
+  <span class="eyebrow rv">05 · VillageAPI</span><h2 class="sh rv">Every village, <span class="grad">one request away</span></h2>
+  <p class="lead rv">A B2B location API with key-based auth, plan limits, state-level access control and dropdown-ready responses. It's running live in your browser — send a request and watch the map light up.</p>
+  <div class="g g2" style="margin-top:26px;align-items:start">
+    <div class="glass pad rv"><h3>Coverage map <span class="tag">stylised outline · sample villages</span></h3><div class="mapbox"><svg id="map" viewBox="0 0 600 640"></svg><div id="mtip"></div></div></div>
+    <div class="glass pad rv"><h3>API playground</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><select id="pk"></select><input id="pq" style="flex:1;min-width:160px" class="mono"><button class="btn p" style="padding:9px 18px" onclick="send()">Send ▶</button></div>
+      <div class="seg" id="eps"></div>
+      <div id="rs" style="margin-top:8px;display:flex;gap:10px;align-items:center"></div><pre class="code" id="out">// choose an endpoint and press Send</pre>
+      <p style="color:var(--mut);font-size:12.5px;margin:10px 0 0">Try the free key with <span class="mono">state=Kerala</span> to trigger a 403 — plans restrict state access.</p></div>
+  </div>
+  <div class="g g2" style="margin-top:16px;align-items:center">
+    <div class="rv"><h3 style="font-size:26px">Drop-in address autocomplete</h3><p class="lead" style="font-size:14.5px;margin-top:8px">The demo client below is a separate app consuming the API: type two characters, pick a village, and the sub-district, district, state and country fill themselves.</p><div class="g" style="margin-top:14px;gap:10px"><span class="tag">GET /autocomplete?q=…</span><span class="tag">X-API-Key header</span><span class="tag">hierarchy + fullAddress payload</span></div><pre class="code" id="po" style="margin-top:18px">// submit the form to see the payload</pre></div>
+    <div class="phone rv"><b style="font:700 17px 'Space Grotesk'">Contact us</b>
+      <label>Full name</label><input id="nm" placeholder="Asha Patel"><label>Email</label><input id="em" placeholder="asha@example.com"><label>Village / area</label><input id="vq" placeholder="try: man, pir, kuk, tha…" autocomplete="off" oninput="ac()"><div id="acl"></div>
+      <label>Sub-district</label><input id="sd" readonly><label>District</label><input id="di" readonly><label>State</label><input id="stt" readonly><label>Country</label><input id="co" readonly>
+      <button class="btn p" style="width:100%;justify-content:center;margin-top:16px" onclick="submitForm()">Submit</button></div>
+  </div>
+</div></section>
+
+<section id="console"><div class="wrap">
+  <span class="eyebrow rv">06 · Admin console</span><h2 class="sh rv">Usage, plans and <span class="grad">live logs</span></h2>
+  <p class="lead rv">Every call you made above shows up here instantly — request volume, state demand, plan limits and the log stream.</p>
+  <div class="g g4 rv" style="margin:24px 0" id="ck"></div>
+  <div class="g g2"><div class="glass pad rv"><h3>Requests · last 14 days</h3><div class="cv"><canvas id="c4"></canvas></div></div><div class="glass pad rv"><h3>Demand by state</h3><div class="cv"><canvas id="c5"></canvas></div></div>
+  <div class="glass pad rv"><h3>Customers &amp; plans</h3><div class="scroll" id="ut"></div></div><div class="glass pad rv"><h3>Live request log</h3><div class="scroll" id="lg"></div></div></div>
+</div></section>
+
+<section id="arch"><div class="wrap">
+  <span class="eyebrow rv">07 · Architecture</span><h2 class="sh rv">From raw SQL to <span class="grad">production insight</span></h2>
+  <div class="glass pad rv" style="margin-top:24px"><svg viewBox="0 0 1000 270" style="width:100%;height:auto" id="ar"></svg>
+  <div class="g g3" style="margin-top:14px"><div><b>Extract &amp; clean</b><br><span style="color:var(--mut);font-size:13px">Parse the SQL dump, standardise year labels, fix nulls, classify sectors, compute D/E, margins, FCF and coverage.</span></div><div><b>Warehouse</b><br><span style="color:var(--mut);font-size:13px">Star schema in PostgreSQL: dim_company, dim_year, dim_sector and fact tables, loaded with idempotent upserts.</span></div><div><b>Serve</b><br><span style="color:var(--mut);font-size:13px">Seven Power BI dashboards, a Django REST API with Swagger docs, and Celery jobs that rescore daily.</span></div></div></div>
+</div></section>
+
+<footer><div class="wrap">All financial figures and village records on this page are <b>synthetic sample data</b> for demonstration. Forecasts are model estimates, not financial advice. Built with Chart.js, vanilla JS and generative SVG.</div></footer>
+
+<div id="ov" onclick="closeCo()"></div><aside id="dr"></aside>
+<div id="pal" onclick="if(event.target===this)pal(0)"><div class="box"><input id="pi" placeholder="Jump to a section or company…" oninput="palR()" onkeydown="palK(event)"><div id="pl"></div></div></div>
+<div id="toast"></div>
+
+<script>
+/* ===== helpers ===== */
+const hs=u=>{try{history.replaceState(null,'',u)}catch(e){}};
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const PAL=['#5eead4','#8b5cf6','#f59e0b','#fb7185','#38bdf8','#a3e635','#f472b6','#fb923c','#2dd4bf','#818cf8','#facc15','#34d399','#e879f9','#60a5fa','#f87171','#4ade80'];
+const CH={};
+function chart(id,cfg){const el=document.getElementById(id);if(!el)return;if(CH[id])CH[id].destroy();Chart.defaults.color=css('--mut');Chart.defaults.borderColor=css('--cb');Chart.defaults.font.family='Inter,system-ui,sans-serif';cfg.options=Object.assign({responsive:true,maintainAspectRatio:false},cfg.options||{});CH[id]=new Chart(el,cfg)}
+const avg=a=>a.reduce((x,y)=>x+y,0)/a.length,f1=x=>isFinite(x)?x.toFixed(1):'–',f0=x=>isFinite(x)?Math.round(x).toLocaleString('en-IN'):'–';
+function rng(seed){let s=seed>>>0;return()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296}}
+const slope=a=>{const n=a.length,mx=(n-1)/2,my=avg(a);let u=0,d=0;a.forEach((y,i)=>{u+=(i-mx)*(y-my);d+=(i-mx)**2});return u/d};
+const cagr=(a,n)=>Math.pow(a.at(-1)/a.at(-1-n),1/n)-1;
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('on'),2200)}
+function tbl(h,rows){return`<table><thead><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(x=>`<td>${x}</td>`).join('')}</tr>`).join('')}</tbody></table>`}
+
+/* ===== data: synthetic warehouse ===== */
+const YEARS=[...Array(10)].map((_,i)=>2015+i);
+const SEED=[['TCS','Tata Consultancy Services','IT',94600,.115,.27,.0,.45,1.10,.30],['INFY','Infosys','IT',53300,.105,.24,.0,.50,1.15,.25],['WIPRO','Wipro','IT',46000,.045,.20,.16,.30,1.25,.17],['HDFCBANK','HDFC Bank','Banking',38000,.16,.45,1.7,.18,1.00,.16],['AXISBANK','Axis Bank','Banking',31000,.09,.38,1.9,.10,.90,.12],['BAJFINANCE','Bajaj Finance','NBFC',9500,.26,.55,2.6,.14,.50,.19],['RELIANCE','Reliance Industries','Energy',300000,.12,.15,.55,.12,1.20,.10],['ADANIPOWER','Adani Power','Power',17000,.07,.30,3.4,.00,1.20,.07],['NTPC','NTPC','Power',80000,.07,.24,1.3,.40,1.30,.11],['ASIANPAINT','Asian Paints','Paint',15500,.11,.19,.08,.55,1.10,.27],['AMBUJACEM','Ambuja Cements','Cement',9800,.05,.17,.02,.35,1.30,.12],['APOLLOHOSP','Apollo Hospitals','Healthcare',5800,.15,.13,.80,.18,1.00,.12],['SBILIFE','SBI Life Insurance','Insurance',28000,.14,.08,.03,.12,1.50,.14],['BAJAJ-AUTO','Bajaj Auto','Auto',22500,.07,.19,.0,.70,1.20,.24],['HINDUNILVR','Hindustan Unilever','Consumer Goods',32000,.07,.22,.01,.80,1.10,.55],['SUNPHARMA','Sun Pharma','Healthcare',29000,.06,.21,.35,.20,1.10,.13]];
+function gen(row,k){const[sym,name,sector,s0,g,opm0,de,pay,ocfR,roe]=row,r=rng(k*7919+13);const c={sym,name,sector,sales:[],op:[],opm:[],np:[],npm:[],eps:[],pay:[],eq:[],bor:[],res:[],ta:[],de:[],icov:[],ocf:[],icf:[],fcf:[],roeA:[]};let sales=s0,eq=0,sh=1;
+ YEARS.forEach((y,i)=>{if(i>0)sales*=1+g+(r()-.5)*.05;const opm=Math.max(.03,opm0+(r()-.5)*.025),op=sales*opm;let intr,np;
+  if(i===0){np=Math.max(op*.55,sales*.01);eq=np/roe;sh=eq/45;intr=de*eq*.08}else{intr=c.bor.at(-1)*.08;np=Math.max((op-intr-sales*.03+sales*.01)*.75,sales*.008)}
+  if(i>0)eq+=np*(1-pay);const bor=de*eq*(1+(r()-.5)*.08),pr=Math.max(0,pay*100+(r()-.5)*8),ocf=np*ocfR*(1+(r()-.5)*.2),icf=-sales*.06*(1+r()*.3),ta=eq+bor+sales*.18;
+  c.sales.push(sales);c.op.push(op);c.opm.push(opm);c.np.push(np);c.npm.push(np/sales*100);c.eps.push(np/sh);c.pay.push(pr);c.eq.push(eq);c.bor.push(bor);c.res.push(eq*.9);c.ta.push(ta);c.de.push(bor/eq);c.icov.push(intr>0?op/intr:99);c.ocf.push(ocf);c.icf.push(icf);c.fcf.push(ocf+icf);c.roeA.push(np/eq*100)});return c}
+const C=SEED.map(gen),SECTORS=[...new Set(C.map(c=>c.sector))],SC=Object.fromEntries(SECTORS.map((s,i)=>[s,PAL[i%PAL.length]]));
+const LABELS=[['EXCELLENT',85,'#2ECC71'],['GOOD',70,'#82E0AA'],['AVERAGE',50,'#F7DC6F'],['WEAK',35,'#F0A500'],['POOR',0,'#E74C3C']],labelOf=s=>LABELS.find(l=>s>=l[1]);
+const MAXW={Profitability:25,'Revenue growth':20,Leverage:20,'Cash flow':15,Dividend:10,Trend:10};
+(function score(){const raw=C.map(c=>(c.opm.at(-1)*100+c.npm.at(-1)+c.roeA.at(-1))/3),so=[...raw].sort((a,b)=>a-b);
+ C.forEach((c,i)=>{c.cagr3=cagr(c.sales,3);c.cagr5=cagr(c.sales,5);c.cagr9=cagr(c.sales,9);c.pcagr3=cagr(c.np,3);
+  const g=c.cagr3*100,d=c.de.at(-1),cc=avg(c.ocf.slice(-5).map((o,j)=>o/c.np.slice(-5)[j])),t=(slope(c.sales.slice(-5))/avg(c.sales.slice(-5))+slope(c.np.slice(-5))/avg(c.np.slice(-5)))/2*100;
+  c.sc={Profitability:so.indexOf(raw[i])/(C.length-1)*25,'Revenue growth':g<=0?0:g<5?g:Math.min(20,5+(g-5)),Leverage:d<=.1?20:d>=2?0:20*(2-d)/1.9,'Cash flow':Math.min(15,cc/1.2*15),Dividend:Math.min(10,avg(c.pay.slice(-5))/30*10),Trend:t<=0?0:Math.min(10,t)};
+  c.score=Object.values(c.sc).reduce((a,b)=>a+b,0);c.label=labelOf(c.score);c.yoy=(c.sales.at(-1)/c.sales.at(-2)-1)*100;
+  const P=[],K=[],L=n=>c.opm.slice(-n-1),inc=a=>a.every((v,i)=>!i||v>a[i-1]),dec=a=>a.every((v,i)=>!i||v<a[i-1]);
+  if(d<.1)P.push('Company is almost debt free.');if(avg(c.roeA.slice(-3))>20)P.push(`Good return on equity: 3-year ROE ${f1(avg(c.roeA.slice(-3)))}%`);if(c.pay.slice(-5).every(p=>p>30))P.push(`Healthy dividend payout of ${f1(avg(c.pay.slice(-5)))}% for 5 years`);if(c.cagr9>.15)P.push(`Strong long-term revenue growth: ${f1(c.cagr9*100)}% CAGR`);if(inc(L(3)))P.push('Operating margins improved for 3 consecutive years');if(c.ocf.slice(-3).every((o,j)=>o>c.np.slice(-3)[j]))P.push('Strong cash conversion — OCF exceeds reported profit');if(c.pcagr3>.15)P.push(`Profit growth accelerated at ${f1(c.pcagr3*100)}% CAGR (3Y)`);
+  if(c.cagr5<.10)K.push('Below-average sales growth over the past five years');if(c.bor.at(-1)>c.bor.at(-2)*1.5)K.push('Borrowings rose sharply in the latest year');if(dec(L(3)))K.push('Operating margins declined three years in a row');if(d>1.5)K.push('High leverage — debt levels need monitoring');if(c.np.at(-1)-c.ocf.at(-1)>.3*c.np.at(-1))K.push('Earnings quality concern — profit exceeds cash generation');if(c.icov.at(-1)<2)K.push('Low interest coverage — repayment risk');
+  c.pros=P;c.cons=K;c.fc=c.sales.at(-1)+slope(c.sales.slice(-5))})})();
+/* peer engine: cosine similarity on z-scored feature vectors */
+(function(){const F=C.map(c=>[c.opm.at(-1)*100,c.roeA.at(-1),c.cagr3*100,Math.min(c.de.at(-1),4),avg(c.ocf.slice(-5).map((o,j)=>o/c.np.slice(-5)[j])),avg(c.pay.slice(-5))]);
+ const mu=F[0].map((_,j)=>avg(F.map(r=>r[j]))),sd=F[0].map((_,j)=>Math.sqrt(avg(F.map(r=>(r[j]-mu[j])**2)))||1),Z=F.map(r=>r.map((v,j)=>(v-mu[j])/sd[j]));
+ const cos=(a,b)=>{let d=0,x=0,y=0;a.forEach((v,i)=>{d+=v*b[i];x+=v*v;y+=b[i]*b[i]});return d/Math.sqrt(x*y)};
+ C.forEach((c,i)=>c.peers=C.map((o,j)=>({o,s:cos(Z[i],Z[j])})).filter(p=>p.o!==c).sort((a,b)=>b.s-a.s).slice(0,4))})();
+const byS=s=>C.filter(c=>c.sector===s),bySym=s=>C.find(c=>c.sym===s),badge=c=>`<span class="pill" style="background:${c.label[2]}">${c.label[0]}</span>`;
+const hue=s=>`hsl(${Math.max(0,Math.min(130,(s-20)*1.7))} 72% 58%)`;
+
+/* ===== visual atoms ===== */
+function ring(s,sz,w=6){const r=(sz-w)/2,L=2*Math.PI*r,m=sz/2;return`<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}"><circle cx="${m}" cy="${m}" r="${r}" fill="none" style="stroke:var(--cb)" stroke-width="${w}"/><circle cx="${m}" cy="${m}" r="${r}" fill="none" stroke="${labelOf(s)[2]}" stroke-width="${w}" stroke-linecap="round" stroke-dasharray="${L*s/100} ${L}" transform="rotate(-90 ${m} ${m})"/><text x="${m}" y="${m+sz*.1}" text-anchor="middle" style="fill:var(--tx)" font-size="${sz*.3}" font-weight="700" font-family="Space Grotesk,sans-serif">${Math.round(s)}</text></svg>`}
+function spark(a,col){const w=200,h=46,mn=Math.min(...a),mx=Math.max(...a),p=a.map((v,i)=>[i/(a.length-1)*w,h-4-(v-mn)/(mx-mn||1)*(h-10)]),d=p.map((q,i)=>(i?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1)).join(''),id='g'+Math.random().toString(36).slice(2,7);return`<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" class="sp"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".4"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs><path d="${d}L${w} ${h}L0 ${h}Z" fill="url(#${id})"/><path d="${d}" fill="none" stroke="${col}" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>`}
+const mono=c=>{const h=[...c.sym].reduce((a,x)=>a+x.charCodeAt(0),0)%360;return`<div class="mn" style="background:linear-gradient(135deg,hsl(${h} 80% 66%),hsl(${(h+50)%360} 80% 58%))">${c.sym.replace(/[^A-Z]/g,'').slice(0,2)}</div>`};
+
+/* ===== hero canvas ===== */
+(function(){const cv=$('#hc'),x=cv.getContext('2d');let W,H,N=[],m={x:-999,y:-999},vis=true;
+ const size=()=>{const d=devicePixelRatio||1;W=cv.clientWidth;H=cv.clientHeight;cv.width=W*d;cv.height=H*d;x.setTransform(d,0,0,d,0,0);N=[...Array(Math.round(Math.min(95,W*H/13000)))].map((_,i)=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.35,vy:(Math.random()-.5)*.35,r:1.5+Math.random()*2.6,c:PAL[i%PAL.length]}))};
+ const frame=()=>{x.clearRect(0,0,W,H);N.forEach(n=>{n.x+=n.vx;n.y+=n.vy;if(n.x<0||n.x>W)n.vx*=-1;if(n.y<0||n.y>H)n.vy*=-1;const dx=n.x-m.x,dy=n.y-m.y,d=Math.hypot(dx,dy);if(d<120){n.x+=dx/d*1.6;n.y+=dy/d*1.6}});
+  for(let i=0;i<N.length;i++)for(let j=i+1;j<N.length;j++){const d=Math.hypot(N[i].x-N[j].x,N[i].y-N[j].y);if(d<125){x.globalAlpha=(1-d/125)*.35;x.strokeStyle=N[i].c;x.beginPath();x.moveTo(N[i].x,N[i].y);x.lineTo(N[j].x,N[j].y);x.stroke()}}
+  x.globalAlpha=.9;N.forEach(n=>{x.fillStyle=n.c;x.beginPath();x.arc(n.x,n.y,n.r,0,7);x.fill()});if(vis&&!matchMedia('(prefers-reduced-motion:reduce)').matches)requestAnimationFrame(frame)};
+ size();frame();addEventListener('resize',size);$('#top').addEventListener('pointermove',e=>{const r=cv.getBoundingClientRect();m={x:e.clientX-r.left,y:e.clientY-r.top}});$('#top').addEventListener('pointerleave',()=>m={x:-999,y:-999});
+ new IntersectionObserver(e=>{const v=e[0].isIntersecting;if(v&&!vis){vis=true;frame()}vis=v}).observe($('#top'))})();
+/* hero floating cards + ticker */
+(function(){const L=[...C].sort((a,b)=>b.score-a.score),t=L[0],w=L.at(-1);
+ $('#fl').innerHTML=[t,L[1],w].map((c,i)=>`<div class="glass fc" style="cursor:pointer" onclick="openCo('${c.sym}')"><div style="display:flex;gap:12px;align-items:center">${mono(c)}<div style="flex:1"><b>${c.name}</b><br><small style="color:var(--mut)">${i<2?'Top-ranked':'Needs attention'} · ${c.sector}</small></div>${ring(c.score,58)}</div>${spark(c.sales,labelOf(c.score)[2])}</div>`).join('');
+ const it=[...C].sort((a,b)=>b.score-a.score).map(c=>`<span class="ti"><b>${c.sym}</b><span style="color:var(--mut)">${f1(c.score)}</span><span class="${c.yoy>=0?'up':'dn'}">${c.yoy>=0?'▲':'▼'} ${f1(Math.abs(c.yoy))}%</span></span>`).join('');$('#tk').innerHTML=it+it})();
+/* count-up + reveal */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12});
+function reveal(){$$('.rv:not(.in)').forEach(e=>io.observe(e))}
+function countUp(el,to,dur=1400,fmt=v=>Math.round(v)){const t0=performance.now();(function f(t){const p=Math.min(1,(t-t0)/dur);el.textContent=fmt(to*(1-Math.pow(1-p,3)));if(p<1)requestAnimationFrame(f)})(t0)}
+$$('[data-count]').forEach(e=>countUp(e,+e.dataset.count));
+
+/* ===== pulse ===== */
+function pulse(){
+ const tot=C.reduce((a,c)=>a+c.sales.at(-1),0);
+ const k=[['Companies tracked',C.length,v=>Math.round(v)],['Total revenue (₹ lakh Cr)',tot/1e5,v=>v.toFixed(2)],['Avg ROE %',avg(C.map(c=>c.roeA.at(-1))),v=>v.toFixed(1)],['Healthy (score ≥ 70)',C.filter(c=>c.score>=70).length,v=>Math.round(v)],['Need attention (< 50)',C.filter(c=>c.score<50).length,v=>Math.round(v)]];
+ $('#kp').innerHTML=k.map((x,i)=>`<div class="glass kpi"><b id="kk${i}">0</b><span>${x[0]}</span></div>`).join('');k.forEach((x,i)=>countUp($('#kk'+i),x[1],1200,x[2]));
+ const items=SECTORS.map(s=>({s,v:byS(s).reduce((a,c)=>a+c.sales.at(-1),0),hs:avg(byS(s).map(c=>c.score)),n:byS(s).length})).sort((a,b)=>b.v-a.v),out=[];
+ (function tm(it,x,y,w,h){if(it.length===1){out.push({...it[0],x,y,w,h});return}const T=it.reduce((a,b)=>a+b.v,0);let a=0,i=0;while(i<it.length-1&&a+it[i].v<T/2){a+=it[i].v;i++}if(!i){a=it[0].v;i=1}const fr=a/T;if(w>=h){tm(it.slice(0,i),x,y,w*fr,h);tm(it.slice(i),x+w*fr,y,w*(1-fr),h)}else{tm(it.slice(0,i),x,y,w,h*fr);tm(it.slice(i),x,y+h*fr,w,h*(1-fr))}})(items,0,0,100,100);
+ $('#tm').innerHTML=out.map(o=>`<div class="tc" onclick="SEC='${o.s}';cards();chips();document.getElementById('screener').scrollIntoView()" style="left:${o.x}%;top:${o.y}%;width:${o.w}%;height:${o.h}%;background:${hue(o.hs)}"><b>${o.s}</b><small>${o.n} co · health ${Math.round(o.hs)}</small></div>`).join('');
+ const hm=SECTORS.map(s=>YEARS.map((_,i)=>avg(byS(s).map(c=>c.opm[i]*100)))),mn=Math.min(...hm.flat()),mx=Math.max(...hm.flat());
+ $('#hm').innerHTML=`<div class="hm" style="grid-template-columns:110px repeat(${YEARS.length},minmax(36px,1fr));min-width:520px"><div></div>${YEARS.map(y=>`<div style="color:var(--mut)">${String(y).slice(2)}</div>`).join('')}${SECTORS.map((s,r)=>`<div style="text-align:left;color:var(--mut);padding-left:0">${s}</div>`+hm[r].map(v=>`<div style="background:color-mix(in srgb,var(--ac) ${Math.round(10+(v-mn)/(mx-mn)*75)}%,transparent)" title="${v.toFixed(1)}%">${v.toFixed(0)}</div>`).join('')).join('')}</div>`;
+ trend(TR);
+ const cnt=LABELS.map(l=>C.filter(c=>c.label[0]===l[0]).length);
+ chart('c2',{type:'doughnut',data:{labels:LABELS.map(l=>l[0]),datasets:[{data:cnt,backgroundColor:LABELS.map(l=>l[2]),borderWidth:0}]},options:{cutout:'66%',plugins:{legend:{position:'right'}}}})}
+let TR='sales';
+function trend(k){TR=k;$('#m1').classList.toggle('on',k==='sales');$('#m2').classList.toggle('on',k==='np');const d=YEARS.map((_,i)=>Math.round(C.reduce((a,c)=>a+c[k][i],0)));
+ chart('c1',{type:'line',data:{labels:YEARS,datasets:[{data:d,borderColor:k==='sales'?'#5eead4':'#8b5cf6',backgroundColor:k==='sales'?'#5eead433':'#8b5cf633',fill:true,tension:.35,pointRadius:3}]},options:{plugins:{legend:{display:false}}}})}
+
+/* ===== screener ===== */
+let SEC='All',Q='',SORT='score';
+function chips(){$('#sf').innerHTML=['All',...SECTORS].map(s=>`<button class="chip ${SEC===s?'on':''}" onclick="SEC='${s}';chips();cards()">${s}</button>`).join('')}
+function cards(){const g={score:c=>-c.score,roe:c=>-c.roeA.at(-1),g3:c=>-c.cagr3,de:c=>c.de.at(-1),sales:c=>-c.sales.at(-1)}[SORT],q=Q.toLowerCase();
+ const L=C.filter(c=>(SEC==='All'||c.sector===SEC)&&(!q||(c.name+c.sym).toLowerCase().includes(q))).sort((a,b)=>g(a)-g(b));
+ $('#cards').innerHTML=L.map((c,i)=>`<article class="glass co" style="--c:${SC[c.sector]};animation:fi .5s ${i*.04}s both" onclick="openCo('${c.sym}')"><div class="top">${mono(c)}<div><b>${c.name}</b><small>${c.sym} · ${c.sector}</small></div>${ring(c.score,54)}</div>${spark(c.sales,SC[c.sector])}<div class="st"><span>ROE <b>${f1(c.roeA.at(-1))}%</b></span><span>OPM <b>${f1(c.opm.at(-1)*100)}%</b></span><span>D/E <b>${c.de.at(-1).toFixed(2)}</b></span></div></article>`).join('')||'<p class="lead">No matches.</p>'}
+document.head.insertAdjacentHTML('beforeend','<style>@keyframes fi{from{opacity:0;transform:translateY(18px)}}</style>');
+
+/* ===== company drawer ===== */
+function openCo(sym){const c=bySym(sym);hs('#'+sym);
+ $('#dr').innerHTML=`<div class="dh">${mono(c)}<div><h2>${c.name}</h2><span class="tag">${c.sym} · ${c.sector}</span></div><button class="ib x" onclick="closeCo()">✕ Close</button></div>
+ <div class="g g2" style="margin-bottom:16px"><div class="glass pad" style="display:flex;gap:16px;align-items:center">${ring(c.score,104,9)}<div><div style="color:var(--mut);font-size:12px">HEALTH SCORE</div>${badge(c)}<div style="margin-top:8px;font-size:13px;color:var(--mut)">Sales CAGR 3Y <b style="color:var(--tx)">${f1(c.cagr3*100)}%</b><br>ROE <b style="color:var(--tx)">${f1(c.roeA.at(-1))}%</b> · D/E <b style="color:var(--tx)">${c.de.at(-1).toFixed(2)}</b></div></div></div><div class="glass pad"><div class="cv" style="height:150px"><canvas id="d0"></canvas></div></div></div>
+ <div class="glass pad" style="margin-bottom:16px"><span class="tag">Model estimate · not financial advice</span><p style="margin:8px 0 0">Linear-trend estimate for next-year sales: <b class="mono" style="font-size:18px">₹${f0(c.fc)} Cr</b> <span class="${c.fc>c.sales.at(-1)?'up':'dn'}">(${c.fc>c.sales.at(-1)?'+':''}${f1((c.fc/c.sales.at(-1)-1)*100)}%)</span></p></div>
+ <div class="g g2"><div class="glass pad"><h3>Revenue vs profit (₹ Cr)</h3><div class="cv" style="height:220px"><canvas id="d1"></canvas></div></div><div class="glass pad"><h3>OPM % vs sector</h3><div class="cv" style="height:220px"><canvas id="d2"></canvas></div></div><div class="glass pad"><h3>Debt-to-equity</h3><div class="cv" style="height:220px"><canvas id="d3"></canvas></div></div><div class="glass pad"><h3>Operating cash flow vs net profit</h3><div class="cv" style="height:220px"><canvas id="d4"></canvas></div></div></div>
+ <div class="g g2" style="margin-top:16px"><div class="glass pad"><h3 style="color:var(--good)">Strengths</h3><ul class="pc pro">${c.pros.map(x=>`<li>${x}</li>`).join('')||'<li>No rule triggered</li>'}</ul></div><div class="glass pad"><h3 style="color:var(--bad)">Watch-outs</h3><ul class="pc con">${c.cons.map(x=>`<li>${x}</li>`).join('')||'<li>No rule triggered</li>'}</ul></div></div>
+ <div class="glass pad" style="margin-top:16px"><h3>Closest peers <span class="tag">cosine similarity on 6 financial ratios</span></h3><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">${c.peers.map(p=>`<button class="chip" onclick="openCo('${p.o.sym}')">${p.o.sym} · ${Math.round(p.s*100)}%</button>`).join('')}</div></div>
+ <div class="glass pad scroll" style="margin-top:16px"><h3>Key metrics</h3>${tbl(['Year','Sales','Net profit','OPM %','EPS','Payout %','D/E'],YEARS.map((y,i)=>[y,f0(c.sales[i]),f0(c.np[i]),f1(c.opm[i]*100),f1(c.eps[i]),f1(c.pay[i]),c.de[i].toFixed(2)]).reverse())}</div>`;
+ document.body.classList.add('open');$('#dr').scrollTop=0;const sec=byS(c.sector);
+ setTimeout(()=>{chart('d0',{type:'radar',data:{labels:Object.keys(MAXW),datasets:[{data:Object.keys(MAXW).map(k=>+(c.sc[k]/MAXW[k]*100).toFixed(0)),borderColor:c.label[2],backgroundColor:c.label[2]+'33'}]},options:{plugins:{legend:{display:false}},scales:{r:{min:0,max:100,ticks:{display:false},pointLabels:{font:{size:10}}}}}});
+ chart('d1',{data:{labels:YEARS,datasets:[{type:'bar',label:'Sales',data:c.sales.map(Math.round),backgroundColor:'#5eead4aa',borderRadius:5},{type:'line',label:'Net profit',data:c.np.map(Math.round),borderColor:'#f59e0b',tension:.35}]}});
+ chart('d2',{type:'line',data:{labels:YEARS,datasets:[{label:c.sym,data:c.opm.map(x=>+(x*100).toFixed(1)),borderColor:'#5eead4',tension:.35},{label:'Sector avg',data:YEARS.map((_,i)=>+(avg(sec.map(s=>s.opm[i]))*100).toFixed(1)),borderColor:'#8995b2',borderDash:[5,4],pointRadius:0}]}});
+ chart('d3',{type:'line',data:{labels:YEARS,datasets:[{label:'D/E',data:c.de.map(x=>+x.toFixed(2)),borderColor:'#fb7185',backgroundColor:'#fb718522',fill:true,tension:.35},{label:'Threshold 1.0',data:YEARS.map(()=>1),borderColor:'#8995b2',borderDash:[5,4],pointRadius:0}]}});
+ chart('d4',{type:'line',data:{labels:YEARS,datasets:[{label:'Operating CF',data:c.ocf.map(Math.round),borderColor:'#34d399',tension:.35},{label:'Net profit',data:c.np.map(Math.round),borderColor:'#f59e0b',tension:.35}]}})},200)}
+function closeCo(){document.body.classList.remove('open');hs(location.pathname);['d0','d1','d2','d3','d4'].forEach(k=>{if(CH[k]){CH[k].destroy();delete CH[k]}})}
+
+/* ===== health lab ===== */
+let W={...MAXW};const PRE={Balanced:{...MAXW},'Growth investor':{Profitability:15,'Revenue growth':35,Leverage:10,'Cash flow':10,Dividend:0,Trend:30},'Income investor':{Profitability:20,'Revenue growth':5,Leverage:15,'Cash flow':20,Dividend:35,Trend:5},Defensive:{Profitability:15,'Revenue growth':5,Leverage:35,'Cash flow':25,Dividend:15,Trend:5}};
+const BASE=[...C].sort((a,b)=>b.score-a.score).map(c=>c.sym);
+function lab(){$('#pre').innerHTML=Object.keys(PRE).map(p=>`<button onclick="preset('${p}')">${p}</button>`).join('');
+ $('#sls').innerHTML=Object.keys(W).map(k=>`<div class="sl"><span>${k}</span><input type="range" min="0" max="50" value="${W[k]}" oninput="W['${k}']=+this.value;labR()" data-k="${k}"><b class="mono" id="w-${k.replace(/\s/g,'')}">0</b></div>`).join('');
+ $('#lb').style.height=C.length*42+'px';$('#lb').innerHTML=C.map(c=>`<div class="lr" id="lr-${c.sym}"><span class="mono" style="color:var(--mut)"></span><b>${c.sym}</b><div class="bw"><i></i></div><span class="mono"></span><span></span></div>`).join('');labR()}
+function preset(p){W={...PRE[p]};$$('#sls input').forEach(i=>i.value=W[i.dataset.k]);labR();toast('Preset: '+p)}
+function labR(){const tw=Object.values(W).reduce((a,b)=>a+b,0)||1;Object.keys(W).forEach(k=>$('#w-'+k.replace(/\s/g,'')).textContent=Math.round(W[k]/tw*100)+'%');
+ const S=C.map(c=>({c,s:Object.keys(W).reduce((a,k)=>a+c.sc[k]/MAXW[k]*(W[k]/tw*100),0)})).sort((a,b)=>b.s-a.s);
+ S.forEach((o,i)=>{const e=$('#lr-'+o.c.sym),d=BASE.indexOf(o.c.sym)-i,l=labelOf(o.s);e.style.transform=`translateY(${i*42}px)`;e.children[0].textContent=i+1;e.children[2].firstChild.style.width=o.s+'%';e.children[2].firstChild.style.background=l[2];e.children[3].textContent=o.s.toFixed(1);e.children[4].innerHTML=d?`<span class="${d>0?'up':'dn'}">${d>0?'▲':'▼'}${Math.abs(d)}</span>`:'<span style="color:var(--mut)">–</span>'})}
+
+/* ===== risk map ===== */
+const MET={'Debt / equity':c=>c.de.at(-1),'ROE %':c=>c.roeA.at(-1),'OPM %':c=>c.opm.at(-1)*100,'3Y sales growth %':c=>c.cagr3*100,'Health score':c=>c.score,'Dividend payout %':c=>avg(c.pay.slice(-5))};
+function risk(){const ax=$('#ax'),ay=$('#ay');if(!ax.options.length){Object.keys(MET).forEach(k=>{ax.add(new Option(k,k));ay.add(new Option(k,k))});ax.value='Debt / equity';ay.value='ROE %'}
+ const X=MET[ax.value],Y=MET[ay.value];
+ chart('c3',{type:'bubble',data:{datasets:SECTORS.map(s=>({label:s,backgroundColor:SC[s]+'99',borderColor:SC[s],data:byS(s).map(c=>({x:+X(c).toFixed(2),y:+Y(c).toFixed(2),r:5+Math.sqrt(c.sales.at(-1))/26,n:c.name,sym:c.sym}))}))},
+  options:{scales:{x:{title:{display:true,text:ax.value}},y:{title:{display:true,text:ay.value}}},plugins:{tooltip:{callbacks:{label:i=>`${i.raw.n}: ${i.raw.x}, ${i.raw.y}`}}},onClick:(e,el,ch)=>{if(el.length)openCo(ch.data.datasets[el[0].datasetIndex].data[el[0].index].sym)}},
+  plugins:[{id:'lbl',afterDatasetsDraw(ch){const x=ch.ctx;x.save();x.font='600 10px Inter';x.fillStyle=css('--tx');x.textAlign='center';ch.data.datasets.forEach((d,i)=>ch.getDatasetMeta(i).data.forEach((p,j)=>x.fillText(d.data[j].sym,p.x,p.y-p.options.radius-4)));x.restore()}}]})}
+
+/* ===== VillageAPI ===== */
+const GEO={Gujarat:{Vadodara:{Savli:['Poicha','Tundav','Manjusar'],Padra:['Mobha','Dabhasa'],Karjan:['Karjan','Piludra']},Surat:{Olpad:['Sayan','Kim'],Mandvi:['Tarsadi','Mandvi']}},Maharashtra:{Nandurbar:{Akkalkuwa:['Manibeli','Chimalkhadi','Rojhird'],Shahada:['Prakasha']},Pune:{Mulshi:['Pirangut','Paud'],Baramati:['Malegaon']}},Rajasthan:{Jaipur:{Amer:['Kukas','Achrol'],Chomu:['Samod']},Jodhpur:{Osian:['Osian','Tinwari']}},Punjab:{Amritsar:{Ajnala:['Ramdas','Chamiyari'],'Baba Bakala':['Beas']},Ludhiana:{Jagraon:['Sidhwan Bet']}},Kerala:{Wayanad:{Mananthavady:['Thirunelli','Thondernad'],Vythiri:['Pozhuthana']},Idukki:{Devikulam:['Munnar','Marayoor']}}};
+const DLL={Vadodara:[22.3,73.2],Surat:[21.2,72.8],Nandurbar:[21.4,74.2],Pune:[18.5,73.8],Jaipur:[26.9,75.8],Jodhpur:[26.3,73.0],Amritsar:[31.6,74.9],Ludhiana:[30.9,75.85],Wayanad:[11.7,76.1],Idukki:[9.85,76.97]};
+const ST=[],DI=[],SD=[],VI=[];let _id=1;const jr=rng(7);
+for(const[s,ds]of Object.entries(GEO)){const sid=_id++;ST.push({id:sid,name:s});for(const[d,sds]of Object.entries(ds)){const did=_id++;DI.push({id:did,name:d,sid});for(const[sd,vs]of Object.entries(sds)){const sdid=_id++;SD.push({id:sdid,name:sd,did});vs.forEach(v=>VI.push({id:525000+_id++,name:v,sdid,ll:[DLL[d][0]+(jr()-.5)*.9,DLL[d][1]+(jr()-.5)*.9]}))}}}
+const hier=v=>{const sd=SD.find(x=>x.id===v.sdid),d=DI.find(x=>x.id===sd.did),s=ST.find(x=>x.id===d.sid);return{village:v.name,subDistrict:sd.name,district:d.name,state:s.name,country:'India'}};
+const KEYS={vk_pro_demo:{plan:'Pro',limit:300000,states:'*',used:0},vk_free_demo:{plan:'Free',limit:5000,states:['Gujarat'],used:0}};
+const dr=rng(99),DAYS=[...Array(14)].map((_,i)=>Math.round(3500+dr()*4000+i*120)),SH=Object.fromEntries(ST.map(s=>[s.name,Math.round(2000+dr()*9000)])),LOG=[];
+const USERS=[['Acme Logistics','ops@acme.example','Pro',182400],['PinCart','dev@pincart.example','Premium',31200],['KYCFlow','api@kycflow.example','Premium',48100],['StartupX','hi@startupx.example','Free',4620],['QuickDeliver','it@quickdeliver.example','Free',2100]].map(u=>({name:u[0],email:u[1],plan:u[2],used:u[3]}));
+const PLANS={Free:{price:'$0',limit:5000},Premium:{price:'$49/mo',limit:50000},Pro:{price:'$199/mo',limit:300000},Enterprise:{price:'Custom',limit:'∞'}};
+function apiCore(path,q,key){const t0=performance.now(),k=KEYS[key];let status=200,body;const fail=(s,c,m)=>{status=s;body={success:false,error:{code:c,message:m}}},ok=r=>{body={success:true,count:r.length,data:r}};
+ if(!k)fail(401,'INVALID_API_KEY','API key missing or invalid');else{k.used++;const al=s=>k.states==='*'||k.states.includes(s),fmt=v=>{const h=hier(v);return{value:'village_id_'+v.id,label:v.name,fullAddress:`${h.village}, ${h.subDistrict}, ${h.district}, ${h.state}, India`,hierarchy:h}};let m;
+  if(path==='/states')ok(ST.filter(s=>al(s.name)));
+  else if(m=path.match(/^\/states\/(\d+)\/districts$/)){const s=ST.find(x=>x.id==m[1]);if(!s)fail(404,'NOT_FOUND','State not found');else if(!al(s.name))fail(403,'ACCESS_DENIED','Your plan does not include '+s.name);else ok(DI.filter(d=>d.sid==s.id))}
+  else if(m=path.match(/^\/districts\/(\d+)\/subdistricts$/)){const d=DI.find(x=>x.id==m[1]);d?ok(SD.filter(x=>x.did==d.id)):fail(404,'NOT_FOUND','District not found')}
+  else if(m=path.match(/^\/subdistricts\/(\d+)\/villages$/)){const sd=SD.find(x=>x.id==m[1]);sd?ok(VI.filter(v=>v.sdid==sd.id).map(fmt)):fail(404,'NOT_FOUND','Sub-district not found')}
+  else if(path==='/search'||path==='/autocomplete'){const s=(q.q||'').trim().toLowerCase();if(s.length<2)fail(400,'INVALID_QUERY','Query must be at least 2 characters');else if(q.state&&!al(q.state))fail(403,'ACCESS_DENIED','Your plan does not include '+q.state);else{let r=VI.filter(v=>v.name.toLowerCase().includes(s)).map(fmt).filter(x=>al(x.hierarchy.state));if(q.state)r=r.filter(x=>x.hierarchy.state===q.state);if(q.district)r=r.filter(x=>x.hierarchy.district===q.district);ok(r.slice(0,+q.limit||25));if(r[0])SH[r[0].hierarchy.state]++}}
+  else fail(404,'NOT_FOUND','Unknown endpoint');
+  body.meta={requestId:'req_'+Math.random().toString(36).slice(2,8),responseTime:Math.round(performance.now()-t0)+3,rateLimit:{remaining:k.limit-k.used,limit:k.limit}};DAYS[13]++}
+ LOG.unshift({t:new Date().toLocaleTimeString(),path,key,status,ms:body.meta?body.meta.responseTime:'–'});return{status,body}}
+function api(p,q,k){const r=apiCore(p,q,k);consoleR();return r}
+/* map */
+const PX=ll=>[(ll[1]-68)/30*560+20,(37.5-ll[0])/30.5*600+20];
+const OUT=[[37,74.5],[35.5,77],[34.5,79],[32.5,78.5],[30.5,80.2],[30,81],[28.5,84],[27.8,88],[28,88.8],[27,89.8],[27.8,92],[29,95],[28,97],[26,95.5],[24,94.5],[22.5,93],[24,92],[22,90],[21.5,88.5],[21.5,87],[19.5,85],[17,82.5],[15.5,80.2],[13,80.3],[10.5,79.8],[9,78.5],[8.1,77.5],[9.5,76.5],[12,75.5],[14.5,74.5],[17,73.5],[19.5,72.8],[21.5,72.8],[20.8,70.5],[22.3,69],[23.2,70],[23.7,68.2],[24.5,70.5],[25.5,71],[27,70],[28.5,71],[29.8,73.5],[31.5,74.8],[33,74.5]];
+let HL=new Set();
+function mapDraw(){const d=OUT.map((p,i)=>(i?'L':'M')+PX(p).map(v=>v.toFixed(1)).join(' ')).join('')+'Z';
+ $('#map').innerHTML=`<defs><pattern id="dots" width="9" height="9" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.1" style="fill:var(--mut)" opacity=".5"/></pattern><linearGradient id="mg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5eead4" stop-opacity=".18"/><stop offset="1" stop-color="#8b5cf6" stop-opacity=".18"/></linearGradient></defs><path d="${d}" fill="url(#mg)" style="stroke:var(--cb)" stroke-width="2"/><path d="${d}" fill="url(#dots)"/>`+
+ VI.map(v=>{const p=PX(v.ll),h=hier(v),on=HL.has(v.id);return`<circle class="pt ${on?'hl':''}" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${on?7:4.5}" fill="${on?'#fbbf24':SC[h.state]||PAL[ST.findIndex(s=>s.name===h.state)]}" opacity="${HL.size&&!on?.3:1}" onmouseenter="mtip(event,'${v.name}','${h.district}, ${h.state}')" onmouseleave="$('#mtip').style.opacity=0" onclick="mapPick('${v.name}')"/>`}).join('')}
+function mtip(e,a,b){const t=$('#mtip'),r=$('.mapbox').getBoundingClientRect();t.innerHTML=`<b>${a}</b><br><span style="color:var(--mut)">${b}</span>`;t.style.left=(e.clientX-r.left+12)+'px';t.style.top=(e.clientY-r.top-10)+'px';t.style.opacity=1}
+function mapPick(n){EPI=0;epDraw();$('#pq').value='q='+n.toLowerCase();send()}
+/* playground */
+const EPS=[['/search','q=man'],['/autocomplete','q=pir'],['/states',''],['/states/1/districts',''],['/districts/2/subdistricts',''],['/subdistricts/3/villages','']];let EPI=0;
+function epDraw(){$('#eps').innerHTML=EPS.map((e,i)=>`<button class="${i===EPI?'on':''}" onclick="EPI=${i};$('#pq').value='${e[1]}';epDraw()">GET ${e[0]}</button>`).join('');if(!$('#pq').value)$('#pq').value=EPS[EPI][1]}
+const hjson=o=>JSON.stringify(o,null,2).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,m=>{let c='n';if(/^"/.test(m))c=/:$/.test(m)?'k':'s';else if(/true|false|null/.test(m))c='b';return`<span class="${c}">${m}</span>`});
+function send(){const key=$('#pk').value,r=api(EPS[EPI][0],Object.fromEntries(new URLSearchParams($('#pq').value)),key);
+ $('#rs').innerHTML=`<span class="pill" style="background:${r.status<300?'#34d399':'#fb7185'}">HTTP ${r.status}</span><span class="mono" style="color:var(--mut);font-size:12px">${r.body.meta?r.body.meta.responseTime+' ms · '+r.body.meta.rateLimit.remaining.toLocaleString()+' left':'rejected before routing'}</span>`;
+ $('#out').innerHTML=hjson(r.body);HL=new Set((r.body.data||[]).map(d=>+String(d.value||'').replace('village_id_','')).filter(Boolean));mapDraw();if(HL.size)setTimeout(()=>{HL=new Set;mapDraw()},4500)}
+/* demo client */
+let PICK=null;
+function ac(){const q=$('#vq').value,b=$('#acl');if(q.length<2){b.innerHTML='';return}const r=api('/autocomplete',{q,limit:8},'vk_pro_demo');window._ac=r.body.data||[];b.innerHTML=`<div class="acl">${window._ac.map((d,i)=>`<div onclick="pick(${i})"><b>${d.label}</b> <span style="color:var(--mut)">${d.hierarchy.subDistrict}, ${d.hierarchy.district}, ${d.hierarchy.state}</span></div>`).join('')||'<div style="color:var(--mut)">No matches</div>'}</div>`}
+function pick(i){PICK=window._ac[i];const h=PICK.hierarchy;$('#vq').value=h.village;$('#sd').value=h.subDistrict;$('#di').value=h.district;$('#stt').value=h.state;$('#co').value=h.country;$('#acl').innerHTML='';HL=new Set([+PICK.value.replace('village_id_','')]);mapDraw();toast('Address auto-filled from the API')}
+function submitForm(){$('#po').innerHTML=hjson({name:$('#nm').value,email:$('#em').value,address:PICK?{villageId:PICK.value,fullAddress:PICK.fullAddress,...PICK.hierarchy}:null});toast('Submitted')}
+/* console */
+function consoleR(){if(!$('#ck'))return;const tot=DAYS.reduce((a,b)=>a+b,0);
+ $('#ck').innerHTML=[['Requests · 14 days',f0(tot)],['Customers',USERS.length],['Avg latency','47 ms'],['Live calls this session',LOG.length]].map(x=>`<div class="glass kpi"><b>${x[1]}</b><span>${x[0]}</span></div>`).join('');
+ $('#lg').innerHTML=tbl(['Time','Endpoint','Key','Status','ms'],LOG.slice(0,8).map(l=>[l.t,l.path,l.key,`<span class="${l.status<300?'up':'dn'}">${l.status}</span>`,l.ms]))||'';
+ if(CH.c4){CH.c4.data.datasets[0].data=DAYS;CH.c4.update('none');CH.c5.data.datasets[0].data=Object.values(SH);CH.c5.update('none')}}
+function users(){$('#ut').innerHTML=tbl(['Customer','Plan','Usage','Limit'],USERS.map((u,i)=>{const l=PLANS[u.plan].limit,p=typeof l==='number'?Math.min(100,u.used/l*100):0;return[`${u.name}<br><span style="color:var(--mut);font-size:11px">${u.email}</span>`,`<select onchange="USERS[${i}].plan=this.value;users();toast('${u.name} → '+this.value)">${Object.keys(PLANS).map(p=>`<option ${p===u.plan?'selected':''}>${p}</option>`).join('')}</select>`,f0(u.used),`<div class="prog" style="width:90px"><i style="width:${p}%;${p>90?'background:var(--bad)':''}"></i></div>`]}))}
+function consoleCharts(){chart('c4',{type:'line',data:{labels:DAYS.map((_,i)=>'D-'+(13-i)),datasets:[{data:DAYS,borderColor:'#5eead4',backgroundColor:'#5eead422',fill:true,tension:.35,pointRadius:2}]},options:{plugins:{legend:{display:false}}}});chart('c5',{type:'bar',data:{labels:Object.keys(SH),datasets:[{data:Object.values(SH),backgroundColor:PAL,borderRadius:6}]},options:{plugins:{legend:{display:false}}}})}
+/* architecture */
+function arch(){const B=(x,y,w,t,s,c)=>`<rect x="${x}" y="${y}" width="${w}" height="62" rx="14" style="fill:var(--card);stroke:${c}" stroke-width="1.5"/><text x="${x+w/2}" y="${y+27}" text-anchor="middle" style="fill:var(--tx)" font-size="14" font-weight="700" font-family="Space Grotesk">${t}</text><text x="${x+w/2}" y="${y+46}" text-anchor="middle" style="fill:var(--mut)" font-size="11">${s}</text>`,L=(a,b,c,d)=>`<path class="flow" d="M${a} ${b}C${(a+c)/2} ${b} ${(a+c)/2} ${d} ${c} ${d}" fill="none" stroke="#5eead4" stroke-width="1.8" opacity=".8"/>`;
+ $('#ar').innerHTML=L(190,125,225,125)+L(395,125,430,125)+L(600,125,640,50)+L(600,125,640,125)+L(600,125,640,200)+L(790,50,830,125)+L(790,125,830,125)+L(790,200,830,125)+
+ B(20,94,170,'SQL dump','7 raw tables','#8b5cf6')+B(225,94,170,'Python ETL','pandas · SQLAlchemy','#5eead4')+B(430,94,170,'PostgreSQL','star-schema warehouse','#38bdf8')+B(640,19,150,'Power BI','7 dashboards','#f59e0b')+B(640,94,150,'Django API','REST · Swagger','#5eead4')+B(640,169,150,'Celery + Redis','daily rescoring','#fb7185')+B(830,94,150,'Users','analysts · partners','#a3e635')}
+/* palette */
+let PI=0,PL=[];const SECS=[['Market pulse','#pulse'],['Screener','#screener'],['Health lab','#lab'],['Risk–return map','#risk'],['VillageAPI playground','#api'],['Admin console','#console'],['Architecture','#arch']];
+function pal(o){$('#pal').classList.toggle('on',!!o);if(o){$('#pi').value='';palR();setTimeout(()=>$('#pi').focus(),30)}}
+function palR(){const q=$('#pi').value.toLowerCase();PL=[...SECS.map(s=>({t:s[0],k:'section',a:()=>{location.hash=s[1]}})),...C.map(c=>({t:c.name,k:c.sym,a:()=>openCo(c.sym)}))].filter(x=>(x.t+x.k).toLowerCase().includes(q)).slice(0,9);PI=0;palD()}
+function palD(){$('#pl').innerHTML=PL.map((x,i)=>`<div class="it ${i===PI?'on':''}" onmouseenter="PI=${i};palD()" onclick="palGo(${i})"><span>${x.t}</span><span class="mono" style="color:var(--mut)">${x.k}</span></div>`).join('')}
+function palGo(i){pal(0);PL[i]&&PL[i].a()}
+function palK(e){if(e.key==='ArrowDown'){PI=(PI+1)%PL.length;palD();e.preventDefault()}else if(e.key==='ArrowUp'){PI=(PI+PL.length-1)%PL.length;palD();e.preventDefault()}else if(e.key==='Enter')palGo(PI)}
+addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();pal(1)}if(e.key==='Escape'){pal(0);closeCo()}});
+/* theme */
+function theme(){const r=document.documentElement,n=r.dataset.theme==='dark'?'light':'dark';r.dataset.theme=n;$('#tt').textContent=n==='dark'?'☾':'☀';try{localStorage.setItem('b100t',n)}catch(e){}pulse();risk();consoleCharts();mapDraw();if(document.body.classList.contains('open')){const h=location.hash.slice(1);if(bySym(h))openCo(h)}}
+/* init */
+try{const t=localStorage.getItem('b100t');if(t){document.documentElement.dataset.theme=t;$('#tt').textContent=t==='dark'?'☾':'☀'}}catch(e){}
+pulse();chips();cards();lab();risk();mapDraw();epDraw();
+$('#pk').innerHTML=Object.keys(KEYS).map(k=>`<option value="${k}">${k} (${KEYS[k].plan})</option>`).join('')+'<option value="bad_key">bad_key (invalid)</option>';
+consoleCharts();users();consoleR();arch();reveal();
+if(bySym(location.hash.slice(1)))openCo(location.hash.slice(1));
+</script>
+</body>
+</html>

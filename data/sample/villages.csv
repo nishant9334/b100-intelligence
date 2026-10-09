@@ -1,0 +1,33 @@
+village_id,village,sub_district,district,state,latitude,longitude
+525004,Poicha,Savli,Vadodara,Gujarat,22.0649,73.5721
+525005,Tundav,Savli,Vadodara,Gujarat,22.4012,73.5843
+525006,Manjusar,Savli,Vadodara,Gujarat,21.8944,73.5202
+525008,Mobha,Padra,Vadodara,Gujarat,22.1749,72.7978
+525009,Dabhasa,Padra,Vadodara,Gujarat,21.9119,73.6355
+525011,Karjan,Karjan,Vadodara,Gujarat,22.7255,73.2281
+525012,Piludra,Karjan,Vadodara,Gujarat,22.2567,73.2431
+525015,Sayan,Olpad,Surat,Gujarat,21.2945,73.0497
+525016,Kim,Olpad,Surat,Gujarat,21.4518,72.7263
+525018,Tarsadi,Mandvi,Surat,Gujarat,21.1767,73.1169
+525019,Mandvi,Mandvi,Surat,Gujarat,21.0762,72.7834
+525023,Manibeli,Akkalkuwa,Nandurbar,Maharashtra,21.0327,74.4242
+525024,Chimalkhadi,Akkalkuwa,Nandurbar,Maharashtra,21.7008,74.0723
+525025,Rojhird,Akkalkuwa,Nandurbar,Maharashtra,21.1110,74.6336
+525027,Prakasha,Shahada,Nandurbar,Maharashtra,21.0599,74.1593
+525030,Pirangut,Mulshi,Pune,Maharashtra,18.4607,73.4472
+525031,Paud,Mulshi,Pune,Maharashtra,18.1526,73.9094
+525033,Malegaon,Baramati,Pune,Maharashtra,18.7455,73.4261
+525037,Kukas,Amer,Jaipur,Rajasthan,26.9950,76.1837
+525038,Achrol,Amer,Jaipur,Rajasthan,26.6892,75.8815
+525040,Samod,Chomu,Jaipur,Rajasthan,26.7675,75.6315
+525043,Osian,Osian,Jodhpur,Rajasthan,26.3112,73.1905
+525044,Tinwari,Osian,Jodhpur,Rajasthan,26.1288,72.6924
+525048,Ramdas,Ajnala,Amritsar,Punjab,31.9367,75.0130
+525049,Chamiyari,Ajnala,Amritsar,Punjab,31.4914,75.3467
+525051,Beas,Baba Bakala,Amritsar,Punjab,31.5861,74.6103
+525054,Sidhwan Bet,Jagraon,Ludhiana,Punjab,30.6783,76.2286
+525058,Thirunelli,Mananthavady,Wayanad,Kerala,11.7792,76.0935
+525059,Thondernad,Mananthavady,Wayanad,Kerala,11.4074,76.0406
+525061,Pozhuthana,Vythiri,Wayanad,Kerala,11.4107,75.6518
+525064,Munnar,Devikulam,Idukki,Kerala,10.0225,77.2040
+525065,Marayoor,Devikulam,Idukki,Kerala,9.5302,77.0087
