@@ -4,13 +4,13 @@
 
 > All financial figures and village records in this repository are **synthetic sample data** generated for demonstration. They are not real market or census data and nothing here is financial advice.
 
-**Live demo:** _add your GitHub Pages URL here after deploying_ &nbsp;·&nbsp; **Stack:** HTML · CSS · vanilla JavaScript · Chart.js · Python (pandas) · GitHub Actions
+**Live demo:** https://b100-intelligence.vercel.app &nbsp;·&nbsp; **Stack:** HTML · CSS · vanilla JavaScript · Chart.js · Python (pandas) · Vercel
 
-<!-- Add screenshots to docs/img/ and uncomment:
 ![Hero](docs/img/hero.png)
+
 ![Health lab](docs/img/health-lab.png)
+
 ![API playground](docs/img/api.png)
--->
 
 ## What it does
 
@@ -72,11 +72,8 @@ python scripts/health_score.py --out data/sample/health_scores.csv
 pytest -q
 ```
 
-## Deploy to GitHub Pages
-
-1. Push this repository to GitHub.
-2. In **Settings → Pages**, set **Source** to **GitHub Actions**.
-3. Push to `main`; the included workflow publishes the site. Put the resulting URL at the top of this README.
+## Deployment
+The site is a static page deployed on Vercel. Every push to `main` triggers a new deployment automatically. `vercel.json` tells Vercel to serve `index.html` as a static site.
 
 ## Mock API reference
 
@@ -101,7 +98,7 @@ data/sample/                # companies, 10-year financials, villages, computed 
 scripts/health_score.py     # pandas implementation of the scoring model
 tests/test_health_score.py  # bounds, labels and edge-case tests
 docs/RESUME.md              # resume bullets, LinkedIn text, interview prep
-.github/workflows/pages.yml # GitHub Pages deployment
+vercel.json                 # Vercel static-site config
 ```
 
 ## Limitations and roadmap
