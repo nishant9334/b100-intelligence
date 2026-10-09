@@ -1,7 +1,7 @@
 # Resume, LinkedIn and interview kit
 
 ## Project line (resume header)
-**B100 Intelligence — Fundamental-analysis dashboard & location API** | JavaScript, Chart.js, Python (pandas), GitHub Actions | [GitHub](https://github.com/nishant9334/b100-intelligence) · [Live demo](<pages-url>)
+**B100 Intelligence — Fundamental-analysis dashboard & location API** | JavaScript, Chart.js, Python (pandas), GitHub Actions | [GitHub](https://github.com/nishant9334/b100-intelligence) · [Live demo](https://github.com/nishant9334/b100-intelligence)
 
 ## Resume bullets (pick 3–4; every claim below is true of the code in this repo)
 - Built an interactive web dashboard analysing 16 Nifty-style companies across 10 fiscal years (160 company-year records), covering profitability, growth, leverage, cash flow and dividends.
